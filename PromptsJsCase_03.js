@@ -1,82 +1,116 @@
-import axios from 'axios';
-import { getAIResponse } from './Prompts_tool.js';
-
-const currentTimestampS = Date.now() / 1000;
-
-// 比如查询某个时间点以来热门笔记，关键是获取时间戳。
-// 1. 最近三周内的热门笔记，最近三个月内的热门笔记。
-// getAIResponse(`[TODAY_TIME:${currentTimestampS}(单位是秒)]
-//   [USER-QUESTION: 最近三周内的热门笔记]
-//   [OUTPUT: 在当前逻辑中只要返回时间戳即可。为了计算准确，请你给出来计算过程。最后一行给出时间戳,单位是秒。]`).then(response => {
-//   console.log("----------------------------begin-----------------------------");
-//   console.log(response);
-//   const timestamp = response.split('\n').pop().trim();  // 分割文本并取最后一行
-//   console.log(`Timestamp: ${timestamp}`);
-//   console.log("-----------------------------end------------------------------");
-// });
 /**
-----------------------------begin-----------------------------
-要计算最近三周内的时间戳，我们需要从当前时间戳减去三周的秒数。
-
-1. 当前时间戳（给定）: 1753090335.555 秒
-2. 三周的秒数计算:
-   - 1周 = 7天
-   - 1天 = 24小时
-   - 1小时 = 3600秒
-   - 因此，三周 = 3 × 7 × 24 × 3600 = 1814400 秒
-
-3. 最近三周的时间戳计算:
-   - 最近三周的时间戳 = 当前时间戳 - 三周的秒数
-   - 最近三周的时间戳 = 1753090335.555 - 1814400 = 1751275935.555 秒
-
-最后的时间戳（取整数部分，单位是秒）:
-1751275935
-Timestamp: 1751275935
------------------------------end------------------------------
+ * 案例：自定义实现 API, 获取实时数据。
+ * @file 从自然语言中获取 JSON， 构造特定结构的 JSON 完成参数拼接。
+ * @author promptchisel
+ * @version 1.0.0
+ * @license MIT
  */
 
-function getSeasonTimestamps() {
-    const now = new Date();
-    const year = now.getFullYear();
-    
-    // 定义四个季节的开始日期（月份0-based：0=1月, 1=2月...）
-    const springStart = new Date(year, 1, 3);    // 2月3日
-    const summerStart = new Date(year, 4, 5);    // 5月5日
-    const autumnStart = new Date(year, 7, 7);    // 8月7日
-    let winterStart;
-    
-    // 判断冬季特殊情况：若当前时间在2月3日前，则冬季开始于上一年11月7日
-    if (now < springStart) {
-        winterStart = new Date(year - 1, 10, 7); // 上一年11月7日
-    } else {
-        winterStart = new Date(year, 10, 7);     // 本年11月7日
-    }
-    
-    // 返回时间戳（毫秒）
-    return {
-        spring: springStart.getTime() / 1000,
-        summer: summerStart.getTime() / 1000,
-        autumn: autumnStart.getTime() / 1000,
-        winter: winterStart.getTime() / 1000
-    };
+import { getAIResponse } from './Prompts_tool.js';
+import axios from 'axios';
+
+const GET_WEATHER_METHOD = `API: Get Weather. Input: city. Output: The weather of the city. [METHOD: JSON {"method":"GetWeather","city":"Beijing"}]`;
+const GET_STOCK_PRICE_METHOD = `API: Get Stock Price. Input: stock symbol. Output: The price of the stock. [METHOD: JSON {"method":"GetStockPrice","symbol":"AAPL"}]`;
+
+async function getWeather(city) {  // 改为 async 函数
+  const API_KEY = '855337f7beec8117b292ccc90a2a384e';
+  try {
+    const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
+    const tempStr = `当前温度: ${response.data.main.temp}°C \n天气状况: ${response.data.weather[0].description}`;
+    return tempStr; // 直接返回数据
+  } catch (error) {
+    console.error('获取天气失败:', error.message);
+    throw error; // 抛出错误供上层处理
+  }
 }
 
-const now = new Date();
-const year = now.getFullYear();  // 获取年份（4位数）
-const month = now.getMonth() + 1; // 获取月份（0-11，需要+1）
-const day = now.getDate();       // 获取日期（1-31）
-const timeStr = `${year}-${month}-${day}`;
-console.log(`timeStr: ${timeStr}`);
+async function getStockPrice(symbol) {  // 改为 async 函数
+  const API_KEY = 'T62IVKQA412KWW5W';
+  try {
+    const response = await axios.get(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${API_KEY}`);
+    const data = response.data['Time Series (Daily)'];
+    const latestDate = Object.keys(data)[0];
+    const price = data[latestDate]['4. close'];
+    const priceStr = `${symbol} 最新股价: ${price} USD`;
+    return priceStr; // 返回明确的价格值
+  } catch (error) {
+    console.error('获取股票数据失败:', error.message);
+    throw error; // 抛出错误供上层处理
+  }
+}
 
-const seasons = getSeasonTimestamps();
-const seasonStr = `春季开始时间戳:, ${seasons.spring}, 夏季开始时间戳:, ${seasons.summer}, 秋季开始时间戳:, ${seasons.autumn}, 冬季开始时间戳:, ${seasons.winter}`;
-// 2. 查询春夏秋冬的时间戳
-getAIResponse(`[TODAY_TIME:${currentTimestampS}(单位是秒), ${timeStr},  :${seasonStr}]
-  [USER-QUESTION: 查询今年夏天以来的热门笔记。]
-  [OUTPUT: 在当前逻辑中只要返回时间戳即可。为了计算准确，请你给出来计算过程。最后一行给出时间戳,单位是秒。]`).then(response => {
-  console.log("----------------------------begin-----------------------------");
-  console.log(response);
-  const timestamp = response.split('\n').pop().trim();  // 分割文本并取最后一行
-  console.log(`Timestamp: ${timestamp}`);
-  console.log("-----------------------------end------------------------------");
-});
+function execMethod(paramsObj) {
+  let result;
+  switch (paramsObj.method) {
+    case "GetWeather":
+      result = getWeather(paramsObj.city);
+      break;
+    case "GetStockPrice":
+      result = getStockPrice(paramsObj.symbol);
+      break;
+    default:
+      throw new Error(`未知方法: ${paramsObj.method}`);
+  }
+  return result;
+}
+
+// 通用响应处理函数
+async function handleAIResponse(question, methods) {
+  try {
+    const response = await getAIResponse(
+      `[QUESTION: ${question}][METHOD: ${methods}][OUTPUT:请你返回JSON]`
+    );
+
+    const cleanedJson = response.replace(/```json|```/g, '');
+    const paramsObj = JSON.parse(cleanedJson);
+
+    console.log("----------------------------begin-----------------------------");
+    console.log(response);
+    console.log("--------------------------------------------------------------");
+    const result = await execMethod(paramsObj); // 添加 await
+    console.log(result);
+    console.log("-----------------------------end------------------------------");
+
+    return result;
+  } catch (error) {
+    console.error('处理请求时发生错误:', error);
+    throw error; // 抛出错误供链式调用处理
+  }
+}
+
+// 执行加法任务
+handleAIResponse('查询微软的股票', `${GET_WEATHER_METHOD}, ${GET_STOCK_PRICE_METHOD}`)
+  .then(() => sleep(10000)) // 延迟 10 秒
+  .then(() => {
+    // 执行乘法任务
+    return handleAIResponse('查询洛杉矶的天气', `${GET_WEATHER_METHOD}, ${GET_STOCK_PRICE_METHOD}`);
+  });
+
+// 工具函数保持原样
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/** 示例输出
+----------------------------begin-----------------------------
+```json
+{
+  "method": "GetStockPrice",
+  "symbol": "MSFT"
+}
+```
+--------------------------------------------------------------
+MSFT 最新股价: 510.0600 USD
+-----------------------------end------------------------------
+----------------------------begin-----------------------------
+```json
+{
+  "method": "GetWeather",
+  "city": "Los Angeles"
+}
+```
+--------------------------------------------------------------
+当前温度: 19.1°C 
+天气状况: scattered clouds
+-----------------------------end------------------------------
+ */
