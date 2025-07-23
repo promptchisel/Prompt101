@@ -53,7 +53,7 @@ function logRadarData(data) {
         console.log(`${key}: ${value}`);
     });
     
-    console.log(`${separator} end ${separator}\n`);
+    console.log(`${separator}  end  ${separator}\n`);
 }
     
 // 执行主函数
