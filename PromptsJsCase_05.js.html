@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chart.js 雷达图</title>
+    <title>Chart.js Radar Chart</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .chart-container {
@@ -23,9 +23,9 @@
         const radarChart = new Chart(ctx, {
             type: 'radar',
             data: {
-                labels: ['协作能力​','问题解决能力​','系统设计','工程实践','编程基础'],
+                labels: ['Collaboration Ability', 'Problem Solving Ability', 'System Design', 'Engineering Practice', 'Programming Fundamentals'],
                 datasets: [{
-                    label: '候选人A',
+                    label: 'Candidate A',
                     data: [8, 9, 8, 8, 9],
                     backgroundColor: 'rgba(52, 152, 219, 0.2)',
                     borderColor: 'rgba(52, 152, 219, 1)',

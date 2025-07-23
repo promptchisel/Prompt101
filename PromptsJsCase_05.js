@@ -1,21 +1,24 @@
 /**
- * 案例：生成雷达图
- * @file 根据候选人的面试表现生成雷达图数据
- * @author promptchisel
+ * Case: Generate Radar Chart
+ * @file Generate radar chart data based on candidate's interview performance
+ * @author promptchisel, milesbennett076@gmail.com
  * @version 1.0.0
- * @license MIT
+ * @license
+ * Copyright (c) 2025 promptchisel, milesbennett076@gmail.com. All rights reserved.
+ * SPDX-License-Identifier: MIT
  */
+
 
 import { getAIResponse } from './Prompts_tool.js';
 
-// 候选人数据样例
-const candidateA = `该候选人在​​编程基础​​方面表现扎实，能够熟练运用数据结构和算法解决问题，代码风格清晰规范。在​​系统设计​​环节，展现了良好的架构思维，能够权衡不同方案的优缺点，并提出可扩展的设计方案。​​问题解决能力​​突出，面对复杂需求时能快速定位核心问题，并给出高效的解决方案。​​工程实践​​经验丰富，熟悉代码优化、测试和调试技巧，具备良好的代码质量意识。此外，候选人的​​协作能力​​较强，沟通表达清晰，能够有效参与技术讨论并融入团队开发流程。`; 
+// Candidate data example
+const candidateA = `The candidate has a solid performance in programming fundamentals, demonstrating proficiency in using data structures and algorithms to solve problems with clear and standardized code style. In the system design section, they showed good architectural thinking, able to weigh the pros and cons of different solutions and propose scalable design plans. The candidate's problem-solving ability is outstanding, quickly identifying core issues when facing complex requirements and providing efficient solutions. They have rich engineering practice experience, familiar with code optimization, testing, and debugging techniques, with a strong awareness of code quality. Additionally, the candidate has strong collaboration ability, with clear communication skills, and can effectively participate in technical discussions and integrate into team development processes.`; 
 
-// 核心处理函数
+// Core processing function
 async function generateRadarData() {
     try {
         const response = await getAIResponse(
-            `[面试信息:${candidateA}][输出描述：请你根据以上信息，返回一个 JSON 结构，包含：协作能力​，问题解决能力​，系统设计，工程实践维度，编程基础，5个字段。结构示例： {
+            `[Interview Information:${candidateA}][Output description: Please return a JSON structure containing the following 5 fields based on the above information: collaboration ability, problem-solving ability, system design, engineering practice, programming fundamentals. Structure example: {
     "collaboration": 8,
     "problem_solving": 9,
     "system_design": 8,
@@ -28,27 +31,27 @@ async function generateRadarData() {
         logRadarData(parsedData);
         return parsedData;
     } catch (error) {
-        console.error('数据处理失败:', error.message);
+        console.error('Data processing failed:', error.message);
         throw error;
     }
 }
 
-// 数据处理函数
+// Data processing function
 function parseResponseData(response) {
     try {
         const cleanedResponse = response.replace(/```json/g, '').replace(/```/g, '').trim();
         return JSON.parse(cleanedResponse);
     } catch (error) {
-        throw new Error(`JSON 解析失败: ${error.message}`);
+        throw new Error(`JSON parsing failed: ${error.message}`);
     }
 }
 
-// 数据输出格式化
+// Data output formatting
 function logRadarData(data) {
     const separator = '----------------------------';
     console.log(`${separator} begin ${separator}`);
     
-    console.log('候选人评估数据:');
+    console.log('Candidate evaluation data:');
     Object.entries(data).forEach(([key, value]) => {
         console.log(`${key}: ${value}`);
     });
@@ -56,18 +59,18 @@ function logRadarData(data) {
     console.log(`${separator}  end  ${separator}\n`);
 }
     
-// 执行主函数
+// Execute main function
 generateRadarData()
-    .then(() => console.log('雷达图数据生成完成'))
-    .catch(error => console.error('流程异常:', error.message));
+    .then(() => console.log('Radar chart data generation completed'))
+    .catch(error => console.error('Process exception:', error.message));
 
-/**
+/** Sample Output:
 ---------------------------- begin ----------------------------
-候选人评估数据:
-collaboration: 8
+Candidate evaluation data:
+collaboration: 9
 problem_solving: 9
 system_design: 8
 engineering_practice: 8
 programming_fundamentals: 9
----------------------------- end ----------------------------
+----------------------------  end  ----------------------------
 */

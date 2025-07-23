@@ -1,10 +1,13 @@
 /**
- * 案例：自定义实现 API, 获取实时数据。
- * @file 从自然语言中获取 JSON， 构造特定结构的 JSON 完成参数拼接。
- * @author promptchisel
+ * Case Name: Custom implementation of API to get real-time data.
+ * @file From natural language, get JSON, and construct specific JSON structure to complete parameter concatenation.
+ * @author promptchisel, milesbennett076@gmail.com
  * @version 1.0.0
- * @license MIT
+ * @license
+ * Copyright (c) 2025 promptchisel, milesbennett076@gmail.com. All rights reserved.
+ * SPDX-License-Identifier: MIT
  */
+
 
 import { getAIResponse } from './Prompts_tool.js';
 import axios from 'axios';
@@ -16,10 +19,10 @@ async function getWeather(city) {  // 改为 async 函数
   const API_KEY = '855337f7beec8117b292ccc90a2a384e';
   try {
     const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
-    const tempStr = `当前温度: ${response.data.main.temp}°C \n天气状况: ${response.data.weather[0].description}`;
+    const tempStr = `Current temperature: ${response.data.main.temp}°C \nWeather condition: ${response.data.weather[0].description}`;
     return tempStr; // 直接返回数据
   } catch (error) {
-    console.error('获取天气失败:', error.message);
+    console.error('Failed to get weather:', error.message);
     throw error; // 抛出错误供上层处理
   }
 }
@@ -31,11 +34,11 @@ async function getStockPrice(symbol) {  // 改为 async 函数
     const data = response.data['Time Series (Daily)'];
     const latestDate = Object.keys(data)[0];
     const price = data[latestDate]['4. close'];
-    const priceStr = `${symbol} 最新股价: ${price} USD`;
-    return priceStr; // 返回明确的价格值
+    const priceStr = `${symbol} latest stock price: ${price} USD`;
+    return priceStr;
   } catch (error) {
-    console.error('获取股票数据失败:', error.message);
-    throw error; // 抛出错误供上层处理
+    console.error('Failed to get stock price:', error.message);
+    throw error;
   }
 }
 
@@ -49,7 +52,7 @@ function execMethod(paramsObj) {
       result = getStockPrice(paramsObj.symbol);
       break;
     default:
-      throw new Error(`未知方法: ${paramsObj.method}`);
+      throw new Error(`Unknown method: ${paramsObj.method}`);
   }
   return result;
 }
@@ -58,7 +61,7 @@ function execMethod(paramsObj) {
 async function handleAIResponse(question, methods) {
   try {
     const response = await getAIResponse(
-      `[QUESTION: ${question}][METHOD: ${methods}][OUTPUT:请你返回JSON]`
+      `[QUESTION: ${question}][METHOD: ${methods}][OUTPUT:Please return JSON]`
     );
 
     const cleanedJson = response.replace(/```json|```/g, '');
@@ -67,31 +70,28 @@ async function handleAIResponse(question, methods) {
     console.log("----------------------------begin-----------------------------");
     console.log(response);
     console.log("--------------------------------------------------------------");
-    const result = await execMethod(paramsObj); // 添加 await
+    const result = await execMethod(paramsObj);
     console.log(result);
     console.log("-----------------------------end------------------------------");
 
     return result;
   } catch (error) {
-    console.error('处理请求时发生错误:', error);
-    throw error; // 抛出错误供链式调用处理
+    console.error('Failed to handle request:', error);
+    throw error;
   }
 }
 
-// 执行加法任务
-handleAIResponse('查询微软的股票', `${GET_WEATHER_METHOD}, ${GET_STOCK_PRICE_METHOD}`)
-  .then(() => sleep(10000)) // 延迟 10 秒
+handleAIResponse('Query Microsoft stock', `${GET_WEATHER_METHOD}, ${GET_STOCK_PRICE_METHOD}`)
+  .then(() => sleep(10000))
   .then(() => {
-    // 执行乘法任务
-    return handleAIResponse('查询洛杉矶的天气', `${GET_WEATHER_METHOD}, ${GET_STOCK_PRICE_METHOD}`);
+    return handleAIResponse('Query Los Angeles weather', `${GET_WEATHER_METHOD}, ${GET_STOCK_PRICE_METHOD}`);
   });
 
-// 工具函数保持原样
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-/** 示例输出
+/** Sample Output:
 ----------------------------begin-----------------------------
 ```json
 {
@@ -100,7 +100,7 @@ function sleep(ms) {
 }
 ```
 --------------------------------------------------------------
-MSFT 最新股价: 510.0600 USD
+MSFT latest stock price: 505.8700 USD
 -----------------------------end------------------------------
 ----------------------------begin-----------------------------
 ```json
@@ -110,7 +110,7 @@ MSFT 最新股价: 510.0600 USD
 }
 ```
 --------------------------------------------------------------
-当前温度: 19.1°C 
-天气状况: scattered clouds
+Current temperature: 18.39°C 
+Weather condition: clear sky
 -----------------------------end------------------------------
  */

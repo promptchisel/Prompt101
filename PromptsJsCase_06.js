@@ -1,21 +1,23 @@
 /**
- * 案例：代码生成
- * @file 使用 LLM 驱动，动态生成代码，并动态执行。
- * @author promptchisel
- * @version 1.0.0      
- * @license MIT
+ * Case: Code Generation
+ * @file Driven by LLM, dynamically generates and executes code.
+ * @author promptchisel, milesbennett076@gmail.com
+ * @version 1.0.0
+ * @license
+ * Copyright (c) 2025 promptchisel, milesbennett076@gmail.com. All rights reserved.
+ * SPDX-License-Identifier: MIT
  */
 
 import axios from 'axios';
-import { NodeVM } from 'vm2';  // 改用 NodeVM 替代 VM
+import { NodeVM } from 'vm2';  // Use NodeVM instead of VM
 import { getAIResponse } from './Prompts_tool.js';
 
 /**
- * 主函数 - 获取并处理AI生成的JSON响应
+ * Main function - Retrieves and processes AI-generated JSON responses
  * @async
  * @function main
- * @returns {Promise<Object>} 解析后的用户数据对象
- * @throws {Error} 处理过程中发生的错误
+ * @returns {Promise<Object>} Parsed user data object
+ * @throws {Error} Errors encountered during processing
  */
 async function main() {
     const APIExampleStr = `
@@ -26,47 +28,47 @@ async function getLosAngelesWeather() {
     
     try {
         const response = await axios.get(url);
-        return \`当前温度: \${response.data.main.temp}°C
-天气状况: \${response.data.weather[0].description}\`;
+        return \`Current Temperature: \${response.data.main.temp}°C
+Weather Condition: \${response.data.weather[0].description}\`;
     } catch (error) {
-        throw new Error(\`获取天气失败: \${error.message}\`);
+        throw new Error(\`Failed to retrieve weather: \${error.message}\`);
     }
 }
 
-// 直接返回函数调用结果
+// Directly return the function call result
 module.exports = getLosAngelesWeather(); 
 `;
 
     let trimAICodeStr = '';
     try {
         const prompt = `
-[API示例: ${APIExampleStr}]
-[用户问题：纽约、洛杉矶、芝加哥、​​休斯敦​​、菲尼克斯的天气]
-[输出：请参考API示例，集合用户问题，使用 NodeJS 编程。这个代码是要在 vm2 中运行的，代码里面可以有注释,因为注释不影响运行。后面会执行代码，不要做额外解释]
+[API Example: ${APIExampleStr}]
+[User Question: Weather in New York, Los Angeles, Chicago, Houston, and Phoenix]
+[Output: Please refer to the API example, incorporate the user's question, and write NodeJS code. This code will run in vm2 and can include comments (as comments do not affect execution). The code will be executed later; Print the data in table format. no additional explanations are needed.]
         `;
         const AICodeStr = await getAIResponse(prompt);
         trimAICodeStr = AICodeStr
-            .replace(/^```javascript\s*/, '') // 匹配开头的```javascript和可能的换行
-            .replace(/\s*```$/, ''); // 匹配结尾的```和可能的换行
+            .replace(/^```javascript\s*/, '') // Match leading ```javascript and possible newlines
+            .replace(/\s*```$/, ''); // Match trailing ``` and possible newlines
         
-        // 打印原始响应
+        // Print the raw response
         console.log("----------------------------code-BEGIN-----------------------------");
         console.log(trimAICodeStr);
         console.log("-----------------------------code-END------------------------------");
     } catch (error) {
-        console.error('执行代码时出错:', error);
+        console.error('Error executing code:', error);
     }
 
     try {
-        // 创建带限制的虚拟机
+        // Create a restricted virtual machine
         const vm = new NodeVM({
-            console: 'inherit',         // 继承控制台输出
-            sandbox: { axios },         // 传入 axios 实例
+            console: 'inherit',         // Inherit console output
+            sandbox: { axios },         // Pass axios instance
             require: {
-                external: true,           // 允许引入外部模块
-                builtin: ['https', 'url'] // 允许 Node.js 内置模块
+                external: true,           // Allow external modules
+                builtin: ['https', 'url'] // Allow Node.js built-in modules
             },
-            wrapper: 'commonjs',        // 使用 CommonJS 包装
+            wrapper: 'commonjs',        // Use CommonJS wrapper
             eval: false,
             wasm: false,
             sourceExtensions: ['js']
@@ -76,55 +78,50 @@ module.exports = getLosAngelesWeather();
             .then(weatherInfo => console.log(weatherInfo))
             .catch(error => console.error(error.message));
     } catch (err) {
-        console.error("被阻止23333:", err);
+        console.error("Blocked 23333:", err);
     }
 }
 
 main().catch(console.error);
-/** 示例输出：
+/** Sample Output:
 ----------------------------code-BEGIN-----------------------------
-async function getMultiCityWeather() {
-  const cities = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'];
-  const API_KEY = '855337f7beec8117b292ccc90a2a384e';
-  let results = [];
+async function getWeatherForCities() {
+    const cities = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'];
+    const API_KEY = '855337f7beec8117b292ccc90a2a384e';
+    const weatherData = [];
 
-  for (const city of cities) {
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`;
-    
-    try {
-      const response = await axios.get(url);
-      results.push({
-        city: city,
-        temp: `${response.data.main.temp}°C`,
-        description: response.data.weather[0].description
-      });
-    } catch (error) {
-      results.push({
-        city: city,
-        error: `获取天气失败: ${error.message}`
-      });
+    for (const city of cities) {
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`;
+        try {
+            const response = await axios.get(url);
+            weatherData.push({
+                City: city,
+                Temperature: `${response.data.main.temp}°C`,
+                Condition: response.data.weather[0].description
+            });
+        } catch (error) {
+            weatherData.push({
+                City: city,
+                Temperature: 'N/A',
+                Condition: 'Failed to retrieve data'
+            });
+        }
     }
-  }
 
-  // 格式化输出结果
-  let output = '';
-  results.forEach(result => {
-    if (result.error) {
-      output += `${result.city}: ${result.error}\n`;
-    } else {
-      output += `${result.city} - 当前温度: ${result.temp}, 天气状况: ${result.description}\n`;
-    }
-  });
-  
-  return output;
+    // Print the data in table format
+    console.table(weatherData);
 }
 
-// 直接返回函数调用结果
-module.exports = getMultiCityWeather();
+// Execute the function
+module.exports = getWeatherForCities();
 -----------------------------code-END------------------------------
-New York - 当前温度: 18.4°C, 天气状况: scattered clouds
-Los Angeles - 当前温度: 18.38°C, 天气状况: clear sky
-Chicago - 当前温度: 21.47°C, 天气状况: broken clouds
-Houston - 当前温度: 25.1°C, 天气状况: clear sky
-Phoenix - 当前温度: 29.17°C, 天气状况: broken clouds
+┌─────────┬───────────────┬─────────────┬───────────────────┐
+│ (index) │ City          │ Temperature │ Condition         │
+├─────────┼───────────────┼─────────────┼───────────────────┤
+│ 0       │ 'New York'    │ '19.86°C'   │ 'overcast clouds' │
+│ 1       │ 'Los Angeles' │ '18.42°C'   │ 'clear sky'       │
+│ 2       │ 'Chicago'     │ '26.04°C'   │ 'clear sky'       │
+│ 3       │ 'Houston'     │ '26.41°C'   │ 'few clouds'      │
+│ 4       │ 'Phoenix'     │ '28.56°C'   │ 'clear sky'       │
+└─────────┴───────────────┴─────────────┴───────────────────┘
  */

@@ -1,25 +1,27 @@
 /**
- * 案例：获取AI生成的JSON响应
- * @file 演示如何从AI获取结构化JSON数据并解析
- * @author promptchisel
+ * Case: Get AI-generated JSON response
+ * @file Demonstrates how to obtain and parse structured JSON data from AI
+ * @author promptchisel, milesbennett076@gmail.com
  * @version 1.0.0
- * @license MIT
+ * @license
+ * Copyright (c) 2025 promptchisel, milesbennett076@gmail.com. All rights reserved.
+ * SPDX-License-Identifier: MIT
  */
 
 import { getAIResponse } from './Prompts_tool.js';
 
 /**
- * 主函数 - 获取并处理AI生成的JSON响应
+ * Main function - Get and process AI-generated JSON response
  * @async
  * @function main
- * @returns {Promise<Object>} 解析后的用户数据对象
- * @throws {Error} 处理过程中发生的错误
+ * @returns {Promise<Object>} Parsed user data object
+ * @throws {Error} Errors occurred during processing
  */
 async function main() {
   try {
     const prompt = `
-      我的同学叫 Alice，她 18 岁。
-      请返回 JSON 对象，示例 JSON 结构: 
+      My classmate is Alice, she is 18 years old.
+      Please return a JSON object, example JSON structure: 
       { 
         "name": "Miles", 
         "age": 17 
@@ -27,36 +29,31 @@ async function main() {
     `;
     const response = await getAIResponse(prompt);
     
-    // 打印原始响应
     console.log("----------------------------response-BEGIN-----------------------------");
     console.log(response);
     console.log("-----------------------------response-END------------------------------");
     
-    // 清理并解析JSON
     const cleanedResponse = response.replace(/```json|```/g, '').trim();
     const person = JSON.parse(cleanedResponse);
-    
-    // 打印解析结果
-    console.log('person 对象: ', person);
-    console.log(`姓名: ${person.name}`);
-    console.log(`年龄: ${person.age}`);
+    console.log('person object: ', person);
+    console.log(`Name: ${person.name}`);
+    console.log(`Age: ${person.age}`);
     
     return person;
   } catch (error) {
-    console.error('处理AI响应时出错:', {
+    console.error('Error processing AI response:', {
       error: error.message,
       stack: error.stack,
-      response: response || '无响应内容' // 添加错误上下文
     });
     throw error;
   }
 }
 
-// 执行主函数
+// Execute main function
 main().catch(console.error);
 
 /**
- * 示例输出：
+ * Sample output:
 ----------------------------response-BEGIN-----------------------------
 ```json
 {
@@ -65,7 +62,7 @@ main().catch(console.error);
 }
 ```
 -----------------------------response-END------------------------------
-person 对象:  { name: 'Alice', age: 18 }
-姓名: Alice
-年龄: 18
+person object:  { name: 'Alice', age: 18 }
+Name: Alice
+Age: 18
  */

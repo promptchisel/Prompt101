@@ -1,10 +1,13 @@
 /**
- * 案例：根据用户问题返回时间戳
- * @file 用户可能会根据季节查询数据，也可能会根据时间查询数据
- * @author promptchisel
+ * Case: Return timestamps based on user questions
+ * @file Users may query data based on seasons or time periods
+ * @author promptchisel, milesbennett076@gmail.com
  * @version 1.0.0
- * @license MIT
+ * @license
+ * Copyright (c) 2025 promptchisel, milesbennett076@gmail.com. All rights reserved.
+ * SPDX-License-Identifier: MIT
  */
+
 
 import { getAIResponse } from './Prompts_tool.js';
 
@@ -12,13 +15,11 @@ function getSeasonTimestamps() {
     const now = new Date();
     const year = now.getFullYear();
     
-    // 使用解构赋值简化日期创建
     const createDate = (y, m, d) => new Date(y, m, d);
     const springStart = createDate(year, 2 - 1, 3);
     const summerStart = createDate(year, 5 - 1, 5);
     const autumnStart = createDate(year, 8 - 1, 7);
     
-    // 简化冬季判断逻辑
     const winterYear = now < springStart ? year - 1 : year;
     const winterStart = createDate(winterYear, 11 - 1, 7);
 
@@ -30,7 +31,7 @@ function getSeasonTimestamps() {
     };
 }
 
-// 集中处理日期信息
+// Centralized date information processing
 const dateInfo = {
     now: new Date(),
     get year() { return this.now.getFullYear() },
@@ -41,76 +42,75 @@ const dateInfo = {
     }
 };
 
-// 使用解构获取季节时间戳
 const { spring, summer, autumn, winter } = getSeasonTimestamps();
-const seasonStr = `春季开始时间戳: ${spring}, 夏季开始时间戳: ${summer}, 秋季开始时间戳: ${autumn}, 冬季开始时间戳: ${winter}`;
+const seasonStr = `Spring start timestamp: ${spring}, Summer start timestamp: ${summer}, Autumn start timestamp: ${autumn}, Winter start timestamp: ${winter}`;
 console.log(seasonStr);
 
 const testCases = [
-    '最近三周的热门笔记',
-    '最近半年的热门笔记', 
-    '今年夏天以来的热门笔记'
+    'Hot notes from the last three weeks',
+    'Hot notes from the last six months', 
+    'Hot notes since this summer'
 ];
 
-// 优化模板字符串格式
-// [USER-QUESTION: 最近三个月内的热门笔记.]
+// Optimized template string format
+// [USER-QUESTION: Hot notes from the last three months.]
 
 testCases.forEach(async(testCase) => {
 const response = await getAIResponse(`[TODAY_TIME:
-  timestamp: ${Math.floor(Date.now() / 1000)} (秒),
+  timestamp: ${Math.floor(Date.now() / 1000)} (seconds),
   timeStr: ${dateInfo.timeStr},
   seasonStr: ${seasonStr}
 ]
 [USER-QUESTION: ${testCase}]
-[OUTPUT:请你按下下面要求计算时间戳，展示完整计算过程
-  a. 如果用户问题和季节相关，直接使用 seasonStr 中的数据。
-  b. 如果用户问题不涉及季节，时间计算使用当前时间减去时间段
-  最后一行单独输出时间戳（单位秒）
+[OUTPUT: Please calculate the timestamp according to the following requirements and show the complete calculation process
+  a. If the user's question is related to seasons, directly use the data in seasonStr.
+  b. If the user's question is not related to seasons, calculate the time by subtracting the time period from the current time.
+  The last line should output the timestamp (in seconds) separately.Do not use the markdown syntax.
 ]`).then(response => {
-        // 统一日志格式
+        // Unified log format
         const logBorder = '----------------------------';
         console.log(`${logBorder} begin ${logBorder}`);
-        console.log(`当前日期: ${dateInfo.timeStr}`);
+        console.log(`Current date: ${dateInfo.timeStr}`);
         console.log(response);
         const timestamp = response.split('\n').pop().trim();
-        console.log(`解析结果: ${timestamp}`);
+        console.log(`Parsing result: ${timestamp}`);
         console.log(`${logBorder}  end  ${logBorder}`);
     });
 });
-/**
-春季开始时间戳: 1738512000, 夏季开始时间戳: 1746374400, 秋季开始时间戳: 1754496000, 冬季开始时间戳: 1762444800
+/** Sample Output:
+Spring start timestamp: 1738512000, Summer start timestamp: 1746374400, Autumn start timestamp: 1754496000, Winter start timestamp: 1762444800
 ---------------------------- begin ----------------------------
-当前日期: 2025-07-23
-用户问题为“最近三周的热门笔记”，不涉及季节相关的内容，因此使用当前时间减去时间段的方法来计算时间戳。
+Current date: 2025-07-24
+To determine the timestamp for "Hot notes since this summer," we will follow these steps:
 
-计算过程：
-1. 当前时间戳：1753234510 秒
-2. 三周的时间（以秒为单位）：3 周 × 7 天/周 × 24 小时/天 × 3600 秒/小时 = 1814400 秒
-3. 最近三周的开始时间戳：1753234510 - 1814400 = 1751420110 秒
+1. The user's question is related to seasons ("since this summer"), so we will use the data in seasonStr.
+2. From seasonStr, the Summer start timestamp is 1746374400.
 
-1751420110
-解析结果: 1751420110
+The timestamp for "since this summer" is therefore the Summer start timestamp.
+
+1746374400
+Parsing result: 1746374400
 ----------------------------  end  ----------------------------
 ---------------------------- begin ----------------------------
-当前日期: 2025-07-23
-用户问题为"最近半年的热门笔记"，不涉及季节相关，因此按照当前时间减去时间段来计算。
+Current date: 2025-07-24
+The user's question is "Hot notes from the last three weeks," which is not related to seasons. Therefore, we will calculate the time by subtracting the time period from the current time.
 
-计算过程：
-1. 当前时间戳：1753234510 秒
-2. 半年时间 ≈ 6 个月 × 30 天/月 × 24 小时/天 × 3600 秒/小时 = 15552000 秒
-3. 最近半年的时间戳 = 当前时间戳 - 半年时间 = 1753234510 - 15552000 = 1737682510 秒
+1. Current timestamp: 1753343325 seconds
+2. Three weeks in seconds: 3 weeks * 7 days/week * 24 hours/day * 60 minutes/hour * 60 seconds/minute = 1814400 seconds
+3. Timestamp for "last three weeks": 1753343325 - 1814400 = 1751528925
 
-时间戳（单位秒）：
-1737682510
-解析结果: 1737682510
+1751528925
+Parsing result: 1751528925
 ----------------------------  end  ----------------------------
 ---------------------------- begin ----------------------------
-当前日期: 2025-07-23
-根据用户问题“今年夏天以来的热门笔记”，问题与季节相关，因此直接使用 seasonStr 中的夏季开始时间戳。
+Current date: 2025-07-24
+To determine the timestamp for "Hot notes from the last six months," we will calculate the time by subtracting the time period from the current time since the question is not related to seasons.
 
-夏季开始时间戳: 1746374400
+1. Current timestamp: 1753343325 seconds (2025-07-24)
+2. Six months in seconds: 6 months * 30 days/month * 24 hours/day * 60 minutes/hour * 60 seconds/minute = 15552000 seconds
+3. Subtract six months from current time: 1753343325 - 15552000 = 1737791325
 
-时间戳（单位秒）: 1746374400
-解析结果: 时间戳（单位秒）: 1746374400
+1737791325
+Parsing result: 1737791325
 ----------------------------  end  ----------------------------
  */

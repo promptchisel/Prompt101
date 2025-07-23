@@ -1,12 +1,20 @@
+/**
+ * @file This is a utility function for sending requests to the DeepSeek API and obtaining responses.
+ * @author promptchisel, milesbennett076@gmail.com
+ * @version 1.0.0
+ * @license
+ * Copyright (c) 2025 promptchisel, milesbennett076@gmail.com. All rights reserved.
+ * SPDX-License-Identifier: MIT
+ */
+
 import axios from 'axios';
 
-// 新增异步函数
-// 提取API配置常量
+// Extract API configuration constants
 const API_URL = 'https://api.deepseek.com/chat/completions';
 const API_KEY = 'Bearer sk-b07cb6936f3b40289ef7e0090266a69b';
 
 export async function getAIResponse(userQuestion) {
-  // 拆分请求数据配置
+  // Split request data configuration
   const requestData = {
     messages: [
       {
@@ -19,7 +27,7 @@ export async function getAIResponse(userQuestion) {
       }
     ],
     model: "deepseek-chat",
-    // 保持默认值的参数使用展开式写法
+    // Parameters with default values use spread syntax
     ...{
       frequency_penalty: 0,
       max_tokens: 2048,
@@ -31,7 +39,7 @@ export async function getAIResponse(userQuestion) {
     stream: false
   };
 
-  // 配置对象结构化
+  // Structured configuration object
   const config = {
     method: 'post',
     url: API_URL,
@@ -48,8 +56,8 @@ export async function getAIResponse(userQuestion) {
     const response = await axios(config);
     return response.data.choices[0].message.content;
   } catch (error) {
-    // 增强错误处理
-    console.error('API请求失败:', error.response?.data || error.message);
+    // Enhanced error handling
+    console.error('API request failed:', error.response?.data || error.message);
     return ""; 
   }
 }
