@@ -12,6 +12,7 @@
 *   `PromptsJsCase_03.js`
 *   `PromptsJsCase_04.js`
 *   `PromptsJsCase_05.js`
+*   `PromptsJsCase_06.js`
 
 ## 案例详解
 
@@ -295,4 +296,105 @@ programming_fundamentals: 9
 <div align="center">
   <img src="./public/radar_cn.png" alt="雷达图" style="width: 42%;"> <!-- 添加width:60%样式 -->
 </div>
+
+
+
+### 案例 6: 执行 AI 动态生成的代码 (`PromptsJsCase_06.js`)
+
+**目的:**
+
+此案例演示了如何使用 LLM 生成动态的 NodeJS 代码，并在 vm2 中执行。代码是根据用户的问题进行对应的编程。
+
+**实现方式:**
+
+首先是根据用户的问题，生成对应的 NodeJS 代码。AI编程时给 AI 提供三种信息：1. 接口信息；2. 用户问题；3. JS 代码输出要求。
+把 AI 编程好的 JS 代码，用 vm2 执行。
+
+**关键代码片段:**
+
+```javascript
+// 1. AI生成代码：
+let trimAICodeStr = '';
+try {
+    const prompt = `
+[API示例: ${APIExampleStr}]
+[用户问题：纽约、洛杉矶、芝加哥、​​休斯敦​​、菲尼克斯的天气]
+[输出：请参考API示例，集合用户问题，使用 NodeJS 编程。这个代码是要在 vm2 中运行的，代码里面可以有注释,因为注释不影响运行。后面会执行代码，不要做额外解释]
+    `;
+    const AICodeStr = await getAIResponse(prompt);
+    trimAICodeStr = AICodeStr
+        .replace(/^```javascript\s*/, '') // 匹配开头的```javascript和可能的换行
+        .replace(/\s*```$/, ''); // 匹配结尾的```和可能的换行
+    
+    // 打印原始响应
+    console.log("----------------------------code-BEGIN-----------------------------");
+    console.log(trimAICodeStr);
+    console.log("-----------------------------code-END------------------------------");
+} catch (error) {
+    console.error('执行代码时出错:', error);
+}
+
+// 2. 执行AI代码
+
+// 创建带限制的虚拟机
+const vm = new NodeVM({
+    console: 'inherit',         // 继承控制台输出
+    sandbox: { axios },         // 传入 axios 实例
+    require: {
+        external: true,           // 允许引入外部模块
+        builtin: ['https', 'url'] // 允许 Node.js 内置模块
+    },
+    wrapper: 'commonjs',        // 使用 CommonJS 包装
+    eval: false,
+    wasm: false,
+    sourceExtensions: ['js']
+});
+vm.run(trimAICodeStr, 'weather.js')
+    .then(weatherInfo => console.log(weatherInfo))
+    .catch(error => console.error(error.message));
+```
+
+**示例输出:**
+
+```
+----------------------------code-BEGIN-----------------------------
+async function getMultiCityWeather() {
+    const cities = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix'];
+    const API_KEY = '855337f7beec8117b292ccc90a2a384e';
+    let results = [];
+
+    for (const city of cities) {
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`;
+        try {
+            const response = await axios.get(url);
+            results.push(`${city}:
+当前温度: ${response.data.main.temp}°C
+天气状况: ${response.data.weather[0].description}\n`);
+        } catch (error) {
+            results.push(`${city}: 获取天气失败 - ${error.message}\n`);
+        }
+    }
+
+    return results.join('');
+}
+
+module.exports = getMultiCityWeather();
+-----------------------------code-END------------------------------
+New York:
+当前温度: 18.92°C
+天气状况: scattered clouds
+Los Angeles:
+当前温度: 18.26°C
+天气状况: clear sky
+Chicago:
+当前温度: 21.44°C
+天气状况: broken clouds
+Houston:
+当前温度: 24.82°C
+天气状况: clear sky
+Phoenix:
+当前温度: 28.65°C
+天气状况: broken clouds
+```
+
 
