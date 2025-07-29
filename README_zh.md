@@ -18,12 +18,14 @@
 
 本项目包含以下核心文件：
 ```bash
-PromptsJsCase_01.js # 案例1：获取 AI 生成的 JSON 响应、结构化输出   
-PromptsJsCase_02.js # 案例2：自定义实现函数调用、路由选择
-PromptsJsCase_03.js # 案例3：LLM 自主选择合适 HTTP API 获取实时数据
-PromptsJsCase_04.js # 案例4：处理时间相关查询（降低任务难度）
-PromptsJsCase_05.js # 案例5：LLM调用工具，实现LLM、后端、前端三端交互、数据可视化
-PromptsJsCase_06.js # 案例6：LLM 动态生成代码、动态编程。
+PromptsJsCase_01.js # 案例 1：获取 AI 生成的 JSON 响应、结构化输出   
+PromptsJsCase_02.js # 案例 2：自定义实现函数调用、路由选择
+PromptsJsCase_03.js # 案例 3：LLM 自主选择合适 HTTP API 获取实时数据
+PromptsJsCase_04.js # 案例 4：处理时间相关查询（降低任务难度）
+PromptsJsCase_05.js # 案例 5：LLM调用工具，实现LLM、后端、前端三端交互、数据可视化
+PromptsJsCase_06.js # 案例 6：LLM 动态生成代码、动态编程
+PromptsJsCase_07.js # 案例 7: 多种格式的文件的输入
+
 ```
 
 ## 🚀 案例详解
@@ -505,3 +507,47 @@ Phoenix:
 ```
 *注意*: 在实际生产环境中，我们可以对上面 HTTP 的进行包装，隐藏 KEY 等敏感信息。
 
+### 案例 7: 如何输入多种格式的文件 (`PromptsJsCase_07.js`)
+
+**目的:**
+
+此案例演示了如何输入各种格式的文件（比如 pptx、docx、xlsx、pdf 等）到 LLM 中，
+此处的文件大小为 1M 左右（10M 以内），把这文件转化为字符串，再传递到上下文中。
+我们使用 Kimi 把文件转化为字符串之后可以再把字符串传给其他 AI 大模型（比如：ChatGPT, DeepSeek等）进行处理。
+
+**实现方式:**
+
+如果文件超过 10M 太大, 可以采用其他方式。
+此处讨论 10M 以下的文件，文件多种格式，比如：pptx、docx、xlsx、pdf 等，输入比较繁琐。
+OpenAI、Gemini 是支持 PDF 文件上传，但对其他格式支持的不是很完善。尽管 OpenAI 的 Assistant API 支持多种文档的格式，但是他是作为知识库使用，根据关键字查询某些信息，而不是整个文档转为字符串。
+各种大模型支持的文件格式各不相同，我们这里采用了一种支持多种文档格式的大模型的提取内容的字符串功能。
+我们使用 Kimi-K2 来提取各种文件中的信息，它支持多种格式，包括：.pdf .txt .csv .doc .docx .xls .xlsx .ppt .pptx .md .jpeg .png .bmp .gif .svg .svgz .webp .ico .xbm .dib .pjp .tif .pjpeg .avif .dot .apng .epub .tiff .jfif .html .json .mobi .log .go .h .c .cpp .cxx .cc .cs .java .js .css .jsp .php .py .py3 .asp .yaml .yml .ini .conf .ts .tsx 等。
+
+**关键代码片段:**
+
+```javascript
+async function getFileContent (filename) {
+    if (!fs.existsSync(filename)) {
+        console.error(`error: file ${filename} not exists`);
+        return "file empty";
+    }
+  const kimi_client = new OpenAI({
+    apiKey: 'sk-rvegaX6DqI...',  // Replace with your actual API key
+    baseURL: 'https://api.moonshot.cn/v1'
+  })
+  let file_object = await kimi_client.files.create({
+    file: fs.createReadStream(filename),
+    purpose: 'file-extract'
+  })
+  return await (await kimi_client.files.content(file_object.id)).text()
+}
+```
+
+**示例输出:**
+
+```
+file_content:
+----------------------------
+ {"content":"content of AI.pptx ...............","file_type":"application/zip","filename":"AI.pptx","title":"","type":"file"} 
+----------------------------
+```

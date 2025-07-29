@@ -11,7 +11,7 @@ import axios from 'axios';
 
 // Extract API configuration constants
 const API_URL = 'https://api.deepseek.com/chat/completions';
-const API_KEY = 'Bearer sk-b07cb6936f3b40289ef7e0090266a69b';
+const API_KEY = 'Bearer sk-b07......'; // replace with your actual API key
 
 export async function getAIResponse(userQuestion) {
   // Split request data configuration

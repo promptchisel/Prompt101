@@ -22,7 +22,9 @@ PromptsJsCase_02.js # Case 2: Custom implementation of function calls, routing s
 PromptsJsCase_03.js # Case 3: LLM autonomously selects appropriate HTTP API to get real-time data 
 PromptsJsCase_04.js # Case 4: Handling time-related queries (reducing task difficulty) 
 PromptsJsCase_05.js # Case 5: LLM calling tools to achieve LLM, backend, and frontend interaction, and data visualization 
-PromptsJsCase_06.js # Case 6: LLM dynamically generates code, dynamic programming. 
+PromptsJsCase_06.js # Case 6: LLM dynamically generates code, dynamic programming
+PromptsJsCase_07.js # Case 7: Multiple File Formats Input
+
 ```
 
 ## 🚀 Case Details 
@@ -513,3 +515,48 @@ module.exports = getWeatherForCities();
 ```
 *Note*: In a real production environment, we can wrap the above HTTP request to hide sensitive information like the API key.
 
+### Case 7: How to Input Multiple File Formats (`PromptsJsCase_07.js`)
+
+**Purpose:**
+
+This case demonstrates how to input various file formats (e.g., pptx, docx, xlsx, pdf, etc.) into the LLM,
+with the file size around 1M (10M max). Convert the file to a string and pass it to the context.
+We use Kimi to convert the file to a string, and then pass the string to other AI models (e.g., ChatGPT, DeepSeek, etc.) for processing.
+
+**Implementation:**
+
+If the file exceeds 10MB and is too large, alternative methods may be employed.
+Here we focus on files under 10MB with various formats such as pptx, docx, xlsx, pdf, etc., which can be cumbersome to input directly.
+OpenAI and Gemini support PDF file uploads but are not as robust in handling other formats. Although OpenAI's Assistant API supports multiple document formats, it primarily uses them as a knowledge base for keyword-based information retrieval rather than converting entire documents into strings.
+Since different large models support varying file formats, we have adopted a model capable of processing multiple document formats to extract and convert content into strings.
+We use Kimi-K2 to extract information from diverse file formats, including:
+.pdf, .txt, .csv, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .md, .jpeg, .png, .bmp, .gif, .svg, .svgz, .webp, .ico, .xbm, .dib, .pjp, .tif, .pjpeg, .avif, .dot, .apng, .epub, .tiff, .jfif, .html, .json, .mobi, .log, .go, .h, .c, .cpp, .cxx, .cc, .cs, .java, .js, .css, .jsp, .php, .py, .py3, .asp, .yaml, .yml, .ini, .conf, .ts, .tsx, etc.
+
+**Key Code Snippet:**
+
+```javascript
+async function getFileContent (filename) {
+    if (!fs.existsSync(filename)) {
+        console.error(`error: file ${filename} not exists`);
+        return "file empty";
+    }
+  const kimi_client = new OpenAI({
+    apiKey: 'sk-rvegaX6DqI...',  // Replace with your actual API key
+    baseURL: 'https://api.moonshot.cn/v1'
+  })
+  let file_object = await kimi_client.files.create({
+    file: fs.createReadStream(filename),
+    purpose: 'file-extract'
+  })
+  return await (await kimi_client.files.content(file_object.id)).text()
+}
+```
+
+**Sample Output:**
+
+```
+file_content:
+----------------------------
+ {"content":"content of AI.pptx ...............","file_type":"application/zip","filename":"AI.pptx","title":"","type":"file"} 
+----------------------------
+```
